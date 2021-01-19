@@ -1,0 +1,6 @@
+terminales: w,x,y
+1 W -> wXY
+2 W -> yWx
+3 X -> wY
+5 X -> Yw
+4 Y -> yx
