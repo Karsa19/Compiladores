@@ -1,8 +1,8 @@
 
 
-class Conjuntos():
+class Conjuntos(object):
 
-    def hacer_Subconjuntos(afn):
+    def hacer_Subconjuntos(self, afn):
 
 
     def cerradura_Epsilon():

@@ -4,7 +4,8 @@ from .transicion import Transicion
 
 class AF(object):
     def __init__(self, alfabeto=[], conj_estados={}, estado_inicial=0, conj_finales=[], es_afd=False):
-
+        self.acepta_estatus = False
+        self.cadenas_generadas = []
         self.alfabeto= alfabeto
         self.conj_estados= conj_estados
         self.estado_inicial= estado_inicial
@@ -34,8 +35,8 @@ class AF(object):
             simbolo = simbolo[1].strip()
             estados[0] = estados[0].strip()
             estados[1] = estados[1].strip()
-            print('Estados = {estados}'.format(estados=estados))
-            print('Simbolo = {simbolo}'.format(simbolo=simbolo))
+            #print('Estados = {estados}'.format(estados=estados))
+            #print('Simbolo = {simbolo}'.format(simbolo=simbolo))
             #transisiciones = [estados[0], estados[1], simbolo]
             self.agregar_estados(estados[0],  estados[1], simbolo, self.es_inicial(estados[0]), self.es_final(estados[0]))
             #self.agregar_estados(estados[1], self.es_inicial(estados[1]), self.es_final(estados[1]))
@@ -49,27 +50,43 @@ class AF(object):
             return -1
 
     def guardar_en(self, nombre):
-        file= open("")
+        #file= open("")
+        txt = ""
+        inicial = "inicial:"
+        finales = []
+        for estado in self.conj_estados:
+            if self.conj_estados[estado].final:
+                finales.append(estado)
+            if self.conj_estados[estado].inicial:
+                inicial = inicial + str(estado)
+            for transicion in self.conj_estados[estado].conj_trans:
+                txt = txt + transicion.inicio + "->" + transicion.fin + "," + transicion.simbolo + "\n"
+
+        print(inicial)
+        print("finales:" + ",".join(finales))
+        print(txt)
+
 
     def agregar_estados(self, etiqueta, destino, simbolo, inicial, final):
         try:
             self.conj_estados[etiqueta]
         except KeyError:
-            self.conj_estados[etiqueta] = Estado(etiqueta=etiqueta, 
-                    conj_trans=[Transicion(inicio=etiqueta, fin=destino, simbolo=simbolo),], 
+            self.conj_estados[etiqueta] = Estado(etiqueta=etiqueta,
+                    conj_trans=[],
                     inicial=inicial, final=final) 
     
 
     def agregar_transicion(self, inicio, fin, simbolo):
         for e in self.conj_estados:
-            if self.conj_estados[e].etiqueta != inicio:
-                self.conj_estados[e].agregar_transicion(inicio, fin, simbolo)
-                
-            elif self.conj_estados[e].etiqueta != fin:
-                self.conj_estados[e].agregar_transicion(inicio, fin, simbolo)
-                
-            else:
-                self.conj_estados[e].agregar_transicion(inicio, fin, simbolo)
+            if str(inicio) == str(e):
+                if self.conj_estados[e].etiqueta != inicio:
+                    self.conj_estados[e].agregar_transicion(inicio, fin, simbolo)
+
+                elif self.conj_estados[e].etiqueta != fin:
+                    self.conj_estados[e].agregar_transicion(inicio, fin, simbolo)
+
+                else:
+                    self.conj_estados[e].agregar_transicion(inicio, fin, simbolo)
 
 
     def eliminar_transicion(self, inicio, fin, simbolo):
@@ -83,7 +100,7 @@ class AF(object):
 
 
     def obtener_incial(self):
-        return self.estado_inicial
+        return self.conj_estados[self.estado_inicial]
 
     def obtener_finales(self):
         return self.conj_finales
@@ -94,7 +111,10 @@ class AF(object):
 
     def establecer_final(self, estado):
         self.conj_finales.append(estado)
-    
+        self.conj_estados[estado] = Estado(etiqueta=estado,
+                                             conj_trans=[],
+                                             inicial=False, final=True)
+
     def es_final(self, estado):
         try:
             self.conj_finales.index(estado)
@@ -128,11 +148,85 @@ class AF(object):
             return True
     
     def acepta(self, cadena):
+        self.acepta_estatus = False
         cad= list(cadena)
-        estado_actual=0
+        estado_inicial: Estado = self.obtener_incial()
+        siguiente_estados = [estado_inicial, ]
+        siguiente_indices = [0, ]
+        self.itera_af(siguiente_estados=siguiente_estados, cadena=cad, siguiente_indices=siguiente_indices)
+        return self.acepta_estatus
+
+    def itera_af(self, siguiente_estados=[], cadena=[], siguiente_indices=[]):
+        contador = 0
+        for estado in siguiente_estados:
+            indice = siguiente_indices[contador]
+            sig_edos, sig_indice = self.obten_sig_edo(estado, cadena, indice)
+            if len(sig_edos) > 0:
+                self.itera_af(sig_edos, cadena, sig_indice)
+            contador += 1
+
+    def obten_sig_edo(self, estado: Estado, cadena=[], indice=0):
+        siguiente_estados = []
+        siguiente_indices = []
+        if indice < len(cadena):
+            token = cadena[indice]
+            for t in estado.conj_trans:
+                if t.simbolo == token:
+                    #print(str(estado.etiqueta) + " => " + token + ", " + str(self.conj_estados[t.fin]))
+                    siguiente_estados.append(self.conj_estados[t.fin])
+                    siguiente_indices.append(indice+1)
+                elif t.simbolo == "E":
+                    #print(str(estado.etiqueta) + " => E, " + str(self.conj_estados[t.fin]))
+                    siguiente_estados.append(self.conj_estados[t.fin])
+                    siguiente_indices.append(indice)
+                if self.es_final(t.fin) and indice == len(cadena)-1:
+                    self.acepta_estatus = True
+
+        return siguiente_estados, siguiente_indices
+
+    def generar_cadena(self, longitud):
+        cad = ["" for i in range(longitud)]
+        estado_inicial: Estado = self.obtener_incial()
+        siguiente_estados = [estado_inicial, ]
+        siguiente_indices = [0, ]
+        siguiente_cadena = [cad, ]
+        self.itera_af_(siguiente_estados=siguiente_estados, siguiente_cadenas=siguiente_cadena, siguiente_indices=siguiente_indices)
+        return cad
 
 
-    def generar_cadena(self):
-        pass
+    def itera_af_(self, siguiente_estados=[], siguiente_cadenas=[], siguiente_indices=[]):
+        contador = 0
+        for estado in siguiente_estados:
+            indice = siguiente_indices[contador]
+            cadena = siguiente_cadenas[contador]
+            sig_edos, sig_indice, sig_cadena = self.obten_sig_edo_(estado, cadena, indice)
+            #print("------------------------------")
+            #print(sig_cadena)
+            if len(sig_edos) > 0:
+                self.itera_af_(sig_edos, sig_cadena, sig_indice)
+            contador += 1
 
-    
+    def obten_sig_edo_(self, estado: Estado, cadena=[], indice=0):
+        siguiente_estados = []
+        siguiente_indices = []
+        siguiente_cadenas = []
+        if indice < len(cadena):
+            # token = cadena[indice]
+            for t in estado.conj_trans:
+                cad = cadena[:]
+                if t.simbolo != "E":
+                    #print(str(t))
+                    cad[indice] = t.simbolo
+                    #print("cad[" + str(indice) + "] = " + t.simbolo)
+                    siguiente_estados.append(self.conj_estados[t.fin])
+                    siguiente_indices.append(indice+1)
+                    siguiente_cadenas.append(cad)
+                elif t.simbolo == "E":
+                    siguiente_estados.append(self.conj_estados[t.fin])
+                    siguiente_indices.append(indice)
+                    siguiente_cadenas.append(cad)
+
+                if self.es_final(t.fin):
+                    self.cadenas_generadas.append(''.join(cad))
+
+        return siguiente_estados, siguiente_indices, siguiente_cadenas
