@@ -1,5 +1,5 @@
 from automata.af import AF
-from automata.estado import Estado
+
 
 def main():
     print("")
@@ -18,7 +18,6 @@ def main():
 
     print("")
     af.guardar_en("")
-
 
 
 if __name__ == '__main__':

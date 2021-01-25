@@ -1,4 +1,9 @@
+from automata.thompson import Thompson
 
 
 def main():
-    pass
+    Thompson()
+
+
+if __name__ == '__main__':
+    main()
