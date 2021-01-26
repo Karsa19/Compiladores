@@ -11,9 +11,11 @@ class Thompson(object):
         self.arbol.right.left = Node(token='.')
         self.arbol.right.right = Node(token='x')
         self.arbol.right.right.left = Node(token='+')
-
         print(str(self.arbol))
         pass
+
+    
+    def crear_arbol(self, expresion):
 
     def exp_epsilon(self):
         pass
