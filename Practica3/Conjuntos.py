@@ -2,6 +2,9 @@
 
 class Conjuntos(object):
 
+    def __init__(self):
+        pass
+
     def hacer_Subconjuntos(self, afn):
 
         while ( hay un estado sin marcar T en Destados ): 
@@ -15,9 +18,9 @@ class Conjuntos(object):
 
 
 
-    def cerradura_Epsilon():
+    def cerradura_Epsilon(self):
         pass
 
     
-    def mover():
+    def mover(self):
         pass
