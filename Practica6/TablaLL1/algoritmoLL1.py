@@ -18,7 +18,7 @@ class AlgoritmoLL1(object):
             return primero 
         
         if alfa[0] in glc.variables: 
-        if p.variable== v:
+            if p.variable== v:
                 primero(p.alfa)
 
     
